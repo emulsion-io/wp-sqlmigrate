@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr-fr" data-theme="dark">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>Générateur de Requêtes SQL Pour migrer Wordpress</title>
+		<link rel="icon" type="image/png" href="https://emulsion.io/favicon.png" />
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css"
+		>
+		<style>
+			.has-text-doom {
+				color: #c00101;
+			}
+		</style>
+		<meta property="og:title" content="DOOM in browser" />
+		<meta property="og:description" content="DOOM in browser" />
+		<meta property="og:type" content="website" />
+	</head>
+	<body>
+
+		<div class="container">
+
+			<section class="hero game-mode is-flex is-justify-content-space-between is-flex-wrap-nowrap is-flex-direction-row is-align-items-center">
+				<div class="hero-body">
+					<p class="title has-text-doom">Wp SqlMigrate</p>
+					<p class="subtitle">Par <span class="has-text-warning">Fabrice Simonet</span></p>
+				</div>
+			</section>
+
+			<article>
+
+				<div class="fixed-grid has-3-cols">
+					<div class="columns">
+						<div class="column">
+
+							<div class="field">
+								<label  for="oldUrl" class="label">Ancienne URL</label>
+								<div class="control">
+									<input class="input" type="text" id="oldUrl" placeholder="https://old">
+								</div>
+							</div>
+
+							<div class="field">
+								<label  for="newUrl" class="label">Nouvelle URL</label>
+								<div class="control">
+									<input class="input" type="text" id="newUrl" placeholder="https://new">
+								</div>
+							</div>
+
+
+							<div class="field">
+								<label  for="prefix" class="label">Préfixe des tables</label>
+								<div class="control">
+									<input class="input" type="text" id="prefix" placeholder="prjt" value="prjt">
+								</div>
+							</div>
+
+							<div class="field mb-4">
+								<div class="control">
+									<button class="button is-link" onclick="generateSQL()">Générer les Requêtes SQL</button>
+								</div>
+							</div>
+
+							<div class="field">
+								<label class="label">Requêtes SQL</label>
+								<div class="control">
+									<textarea class="textarea" id="sqlOutput" readonly></textarea>
+								</div>
+							</div>
+
+							<div class="field">
+								<div class="control">
+									<button class="button is-link" onclick="copyToClipboard()">Copier</button>
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+
+			</article>
+
+			<footer class="footer mt-4 game-mode">
+				<div class="content has-text-centered">
+				<p>
+					<strong>Wp SqlMigrate</strong> par <a class="has-text-warning" href="https://emulsion.io">Fabrice Simonet</a>.
+
+					<a href="https://emulsion.io" title="Agence emulsion.io | Simonet Fabrice" style="text-decoration:none; margin-top:20px; display: block;">
+						<img src="https://cdn.emulsion.io/signature/fond-noir.svg" width="25px" height="23px" alt="Agence emulsion.io | Simonet Fabrice"> <span style="color:#fff; vertical-align: bottom;">Emulsion</span><span style="color:#ffa726; vertical-align: bottom;">.io</span>
+					</a>
+				</p>
+				</div>
+			</footer>
+
+		</div>
+
+		<script type='text/javascript'>
+			function ensureHttps(url) {
+				if (!url.startsWith('https://')) {
+					url = 'https://' + url;
+				}
+				
+				return url.endsWith('/') ? url.slice(0, -1) : url;
+			}
+
+			function generateSQL() {
+					let oldUrl = document.getElementById('oldUrl').value;
+					let newUrl = document.getElementById('newUrl').value;
+					const prefix = document.getElementById('prefix').value;
+
+					if (!oldUrl || !newUrl || !prefix) {
+						alert("Veuillez remplir tous les champs.");
+						return;
+					}
+
+					oldUrl = ensureHttps(oldUrl);
+					newUrl = ensureHttps(newUrl);
+
+					const sqlQueries = `
+UPDATE ${prefix}_options SET option_value = replace(option_value, '${oldUrl}', '${newUrl}') WHERE option_name = 'home' OR option_name = 'siteurl';
+UPDATE ${prefix}_posts SET guid = replace(guid, '${oldUrl}', '${newUrl}');
+UPDATE ${prefix}_posts SET post_content = replace(post_content, '${oldUrl}', '${newUrl}'); 
+UPDATE ${prefix}_postmeta SET meta_value = replace(meta_value, '${oldUrl}', '${newUrl}');
+
+UPDATE ${prefix}_revslider_slides SET params = replace(params, '${oldUrl}', '${newUrl}');
+UPDATE ${prefix}_revslider_slides SET layers = replace(layers, '${oldUrl}', '${newUrl}');
+UPDATE ${prefix}_revslider_sliders SET params = replace(params, '${oldUrl}', '${newUrl}');
+					`;
+
+					document.getElementById('sqlOutput').value = sqlQueries.trim();
+			}
+
+			function copyToClipboard() {
+				const textarea = document.getElementById('sqlOutput');
+				textarea.select();
+				document.execCommand('copy');
+				alert('Requêtes SQL copiées dans le presse-papiers');
+			}
+		</script>
+	</body>
+</html>
